@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero compact">
+        <div>
+          <p class="eyebrow">Admin Panel</p>
+          <h1>Manage workout levels</h1>
+          <p class="hero-copy">
+            Create levels and open each one to add or remove exercises.
+          </p>
+        </div>
+        <div class="hero-actions">
+          <form action="/admin/logout" method="POST">
+            <button class="button secondary" type="submit">Logout</button>
+          </form>
+          <a class="button secondary" href="/">Back to Home</a>
+        </div>
+      </header>
+
+      <div class="admin-layout">
+        <section class="panel">
+          <div class="section-heading">
+            <h2>Add new level</h2>
+          </div>
+
+          <% if (error) { %>
+            <div class="alert"><%= error %></div>
+          <% } %>
+
+          <form class="form-grid" action="/admin/levels" method="POST">
+            <div class="field">
+              <label for="name">Level Name</label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                placeholder="Beginner"
+                required
+              />
+            </div>
+            <button class="button" type="submit">Add Level</button>
+          </form>
+        </section>
+
+        <section class="panel">
+          <div class="section-heading">
+            <h2>All levels</h2>
+            <span class="pill"><%= levels.length %> total</span>
+          </div>
+
+          <% if (levels.length === 0) { %>
+            <p class="muted">No levels created yet.</p>
+          <% } else { %>
+            <div class="stack-list">
+              <% levels.forEach((level) => { %>
+                <div class="list-item">
+                  <div>
+                    <p class="list-title"><%= level.name %></p>
+                    <p class="muted">Dynamic route: /levels/<%= level.id %></p>
+                  </div>
+                  <div class="list-actions">
+                    <a class="button secondary" href="/levels/<%= level.id %>">View</a>
+                    <a class="button" href="/admin/levels/<%= level.id %>">Manage Exercises</a>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          <% } %>
+        </section>
+      </div>
+    </div>
+  </body>
+</html>

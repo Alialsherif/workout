@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= level.name %> Workout</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero compact">
+        <div>
+          <p class="eyebrow">Training Level</p>
+          <h1><%= level.name %></h1>
+          <p class="hero-copy">
+            Complete each exercise and tick the checkbox when you are done.
+          </p>
+        </div>
+        <div class="hero-actions">
+          <a class="button secondary" href="/">Back to Home</a>
+        </div>
+      </header>
+
+      <section class="panel">
+        <div class="section-heading">
+          <h2>Workout plan</h2>
+          <span class="pill"><%= exercises.length %> exercise(s)</span>
+        </div>
+
+        <% if (exercises.length === 0) { %>
+          <p class="muted">This level has no exercises yet. Check back later.</p>
+        <% } else { %>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Exercise Name</th>
+                  <th>Reps or Time</th>
+                  <th>Sets</th>
+                  <th>Rest Time</th>
+                  <th>Done</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% exercises.forEach((exercise) => { %>
+                  <tr>
+                    <td data-label="Exercise Name"><%= exercise.name %></td>
+                    <td data-label="Reps or Time"><%= exercise.reps_or_time %></td>
+                    <td data-label="Sets"><%= exercise.sets %></td>
+                    <td data-label="Rest Time"><%= exercise.rest_time %></td>
+                    <td data-label="Done">
+                      <label class="checkbox-cell">
+                        <input type="checkbox" />
+                        <span>Done</span>
+                      </label>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } %>
+      </section>
+    </div>
+  </body>
+</html>

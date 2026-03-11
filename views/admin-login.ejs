@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Login</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero compact">
+        <div>
+          <p class="eyebrow">Admin Access</p>
+          <h1>Sign in to the admin panel</h1>
+          <p class="hero-copy">
+            The admin dashboard uses a session cookie after successful login.
+          </p>
+        </div>
+        <div class="hero-actions">
+          <a class="button secondary" href="/">Back to Home</a>
+        </div>
+      </header>
+
+      <section class="panel auth-panel">
+        <div class="section-heading">
+          <h2>Admin Login</h2>
+        </div>
+
+        <% if (error) { %>
+          <div class="alert"><%= error %></div>
+        <% } %>
+
+        <form class="form-grid" action="/admin/login" method="POST">
+          <div class="field">
+            <label for="email">Email</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="admin@fitness.com"
+              value="<%= email %>"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label for="password">Password</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="Enter your password"
+              required
+            />
+          </div>
+
+          <button class="button" type="submit">Login</button>
+        </form>
+      </section>
+    </div>
+  </body>
+</html>

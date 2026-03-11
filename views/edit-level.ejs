@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manage <%= level.name %></title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero compact">
+        <div>
+          <p class="eyebrow">Manage Exercises</p>
+          <h1><%= level.name %></h1>
+          <p class="hero-copy">
+            Add exercises for this level. Users will see them on
+            <strong>/levels/<%= level.id %></strong>.
+          </p>
+        </div>
+        <div class="hero-actions">
+          <form action="/admin/logout" method="POST">
+            <button class="button secondary" type="submit">Logout</button>
+          </form>
+          <a class="button secondary" href="/admin">Back to Admin</a>
+          <a class="button" href="/levels/<%= level.id %>">Open User View</a>
+        </div>
+      </header>
+
+      <section class="panel">
+        <div class="section-heading">
+          <h2>Add exercise</h2>
+        </div>
+
+        <% if (error) { %>
+          <div class="alert"><%= error %></div>
+        <% } %>
+
+        <form
+          class="form-grid four-columns"
+          action="/admin/levels/<%= level.id %>/exercises"
+          method="POST"
+        >
+          <div class="field">
+            <label for="name">Exercise Name</label>
+            <input id="name" name="name" type="text" placeholder="Push Ups" required />
+          </div>
+          <div class="field">
+            <label for="reps_or_time">Reps or Time</label>
+            <input
+              id="reps_or_time"
+              name="reps_or_time"
+              type="text"
+              placeholder="15 reps or 45 sec"
+              required
+            />
+          </div>
+          <div class="field">
+            <label for="sets">Sets</label>
+            <input id="sets" name="sets" type="text" placeholder="3" required />
+          </div>
+          <div class="field">
+            <label for="rest_time">Rest Time</label>
+            <input
+              id="rest_time"
+              name="rest_time"
+              type="text"
+              placeholder="30 sec"
+              required
+            />
+          </div>
+          <button class="button" type="submit">Add Exercise</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
+          <h2>Exercises</h2>
+          <span class="pill"><%= exercises.length %> item(s)</span>
+        </div>
+
+        <% if (exercises.length === 0) { %>
+          <p class="muted">No exercises added for this level yet.</p>
+        <% } else { %>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Exercise Name</th>
+                  <th>Reps or Time</th>
+                  <th>Sets</th>
+                  <th>Rest Time</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% exercises.forEach((exercise) => { %>
+                  <tr>
+                    <td data-label="Exercise Name"><%= exercise.name %></td>
+                    <td data-label="Reps or Time"><%= exercise.reps_or_time %></td>
+                    <td data-label="Sets"><%= exercise.sets %></td>
+                    <td data-label="Rest Time"><%= exercise.rest_time %></td>
+                    <td data-label="Action">
+                      <form action="/admin/exercises/<%= exercise.id %>/delete" method="POST">
+                        <input type="hidden" name="level_id" value="<%= level.id %>" />
+                        <button class="button danger" type="submit">Delete</button>
+                      </form>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } %>
+      </section>
+    </div>
+  </body>
+</html>
