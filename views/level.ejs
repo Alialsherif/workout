@@ -1,57 +1,61 @@
-<!DOCTYPE html>
-<html lang="en">
+﻿<!DOCTYPE html>
+<html lang="<%= lang %>" dir="<%= dir %>">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><%= level.name %> Workout</title>
+    <meta name="theme-color" content="#1f7a55" />
+    <title><%= level.name %> | <%= t.workoutPlan %></title>
     <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
     <div class="page-shell">
+      <div class="lang-switcher" dir="ltr">
+        <a class="lang-pill <%= lang === 'ar' ? 'active' : '' %>" href="<%= switchToArabicHref %>"><%= t.langArabic %></a>
+        <a class="lang-pill <%= lang === 'en' ? 'active' : '' %>" href="<%= switchToEnglishHref %>"><%= t.langEnglish %></a>
+      </div>
+
       <header class="hero compact">
         <div>
-          <p class="eyebrow">Training Level</p>
-          <h1><%= level.name %></h1>
-          <p class="hero-copy">
-            Complete each exercise and tick the checkbox when you are done.
-          </p>
+          <p class="eyebrow"><%= t.trainingLevel %></p>
+          <h1 dir="auto"><%= level.name %></h1>
+          <p class="hero-copy"><%= t.levelIntro %></p>
         </div>
         <div class="hero-actions">
-          <a class="button secondary" href="/">Back to Home</a>
+          <a class="button secondary" href="/"><%= t.backHome %></a>
         </div>
       </header>
 
       <section class="panel">
         <div class="section-heading">
-          <h2>Workout plan</h2>
-          <span class="pill"><%= exercises.length %> exercise(s)</span>
+          <h2><%= t.pendingExercises %></h2>
+          <span class="pill"><span id="pending-count"><%= exercises.length %></span> <%= t.exerciseCount %></span>
         </div>
 
         <% if (exercises.length === 0) { %>
-          <p class="muted">This level has no exercises yet. Check back later.</p>
+          <p class="muted"><%= t.noExercises %></p>
         <% } else { %>
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>Exercise Name</th>
-                  <th>Reps or Time</th>
-                  <th>Sets</th>
-                  <th>Rest Time</th>
-                  <th>Done</th>
+                  <th><%= t.exerciseName %></th>
+                  <th><%= t.repsOrTime %></th>
+                  <th><%= t.sets %></th>
+                  <th><%= t.restTime %></th>
+                  <th><%= t.done %></th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody id="pending-exercises">
                 <% exercises.forEach((exercise) => { %>
-                  <tr>
-                    <td data-label="Exercise Name"><%= exercise.name %></td>
-                    <td data-label="Reps or Time"><%= exercise.reps_or_time %></td>
-                    <td data-label="Sets"><%= exercise.sets %></td>
-                    <td data-label="Rest Time"><%= exercise.rest_time %></td>
-                    <td data-label="Done">
+                  <tr data-exercise-id="<%= exercise.id %>">
+                    <td data-label="<%= t.exerciseName %>" dir="auto"><%= exercise.name %></td>
+                    <td data-label="<%= t.repsOrTime %>" dir="auto"><%= exercise.reps_or_time %></td>
+                    <td data-label="<%= t.sets %>" dir="auto"><%= exercise.sets %></td>
+                    <td data-label="<%= t.restTime %>" dir="auto"><%= exercise.rest_time %></td>
+                    <td data-label="<%= t.done %>">
                       <label class="checkbox-cell">
-                        <input type="checkbox" />
-                        <span>Done</span>
+                        <input class="exercise-toggle" type="checkbox" value="<%= exercise.id %>" />
+                        <span><%= t.complete %></span>
                       </label>
                     </td>
                   </tr>
@@ -62,9 +66,120 @@
         <% } %>
       </section>
 
-      <footer class="project-signature" dir="rtl">
-        <p>قام بتنفيذ هذا المشروع البسيط المهندس علي الشريف</p>
+      <% if (exercises.length > 0) { %>
+        <section class="panel completed-panel">
+          <div class="section-heading">
+            <h2><%= t.completedExercises %></h2>
+            <span class="pill"><span id="completed-count">0</span> <%= t.exerciseCount %></span>
+          </div>
+          <p id="completed-empty" class="muted"><%= t.noCompletedExercises %></p>
+          <div class="table-wrap completed-wrap" id="completed-wrap" hidden>
+            <table>
+              <thead>
+                <tr>
+                  <th><%= t.exerciseName %></th>
+                  <th><%= t.repsOrTime %></th>
+                  <th><%= t.sets %></th>
+                  <th><%= t.restTime %></th>
+                  <th><%= t.done %></th>
+                </tr>
+              </thead>
+              <tbody id="completed-exercises"></tbody>
+            </table>
+          </div>
+        </section>
+      <% } %>
+
+      <footer class="project-signature contact-footer">
+        <p><%= t.footerMarketing %></p>
+        <a class="button whatsapp-button" href="https://wa.me/201036178517" target="_blank" rel="noopener noreferrer"><%= t.contactWhatsApp %></a>
       </footer>
     </div>
+
+    <% if (exercises.length > 0) { %>
+      <script>
+        (() => {
+          const cookieName = "level_progress_<%= level.id %>";
+          const pendingBody = document.getElementById("pending-exercises");
+          const completedBody = document.getElementById("completed-exercises");
+          const pendingCount = document.getElementById("pending-count");
+          const completedCount = document.getElementById("completed-count");
+          const completedEmpty = document.getElementById("completed-empty");
+          const completedWrap = document.getElementById("completed-wrap");
+
+          function readCookie(name) {
+            const parts = document.cookie ? document.cookie.split("; ") : [];
+            const part = parts.find((item) => item.startsWith(`${name}=`));
+            return part ? decodeURIComponent(part.split("=").slice(1).join("=")) : "";
+          }
+
+          function writeCookie(name, value) {
+            const maxAge = 60 * 60 * 24 * 30;
+            document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; samesite=lax`;
+          }
+
+          function getCompletedIds() {
+            const raw = readCookie(cookieName);
+            if (!raw) {
+              return [];
+            }
+
+            return raw
+              .split(",")
+              .map((value) => Number(value))
+              .filter((value) => Number.isInteger(value) && value > 0);
+          }
+
+          function saveCompletedIds(ids) {
+            const uniqueIds = [...new Set(ids)].sort((first, second) => first - second);
+            writeCookie(cookieName, uniqueIds.join(","));
+          }
+
+          function refreshCounts() {
+            pendingCount.textContent = pendingBody.querySelectorAll("tr").length;
+            completedCount.textContent = completedBody.querySelectorAll("tr").length;
+            const hasCompleted = completedBody.querySelectorAll("tr").length > 0;
+            completedWrap.hidden = !hasCompleted;
+            completedEmpty.hidden = hasCompleted;
+          }
+
+          function moveRow(checkbox) {
+            const row = checkbox.closest("tr");
+            if (!row) {
+              return;
+            }
+
+            if (checkbox.checked) {
+              row.classList.add("is-complete");
+              completedBody.appendChild(row);
+            } else {
+              row.classList.remove("is-complete");
+              pendingBody.appendChild(row);
+            }
+
+            refreshCounts();
+          }
+
+          function syncCookie() {
+            const checkedIds = Array.from(document.querySelectorAll(".exercise-toggle:checked")).map((input) => Number(input.value));
+            saveCompletedIds(checkedIds);
+          }
+
+          const completedIds = new Set(getCompletedIds());
+          document.querySelectorAll(".exercise-toggle").forEach((checkbox) => {
+            const exerciseId = Number(checkbox.value);
+            checkbox.checked = completedIds.has(exerciseId);
+            moveRow(checkbox);
+
+            checkbox.addEventListener("change", () => {
+              moveRow(checkbox);
+              syncCookie();
+            });
+          });
+
+          refreshCounts();
+        })();
+      </script>
+    <% } %>
   </body>
 </html>

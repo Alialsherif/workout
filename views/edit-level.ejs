@@ -1,39 +1,65 @@
-<!DOCTYPE html>
-<html lang="en">
+﻿<!DOCTYPE html>
+<html lang="<%= lang %>" dir="<%= dir %>">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Manage <%= level.name %></title>
+    <meta name="theme-color" content="#1f7a55" />
+    <title><%= t.manageExercisesTitle %> <%= level.name %></title>
     <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
     <div class="page-shell">
+      <div class="lang-switcher" dir="ltr">
+        <a class="lang-pill <%= lang === 'ar' ? 'active' : '' %>" href="<%= switchToArabicHref %>"><%= t.langArabic %></a>
+        <a class="lang-pill <%= lang === 'en' ? 'active' : '' %>" href="<%= switchToEnglishHref %>"><%= t.langEnglish %></a>
+      </div>
+
       <header class="hero compact">
         <div>
-          <p class="eyebrow">Manage Exercises</p>
-          <h1><%= level.name %></h1>
-          <p class="hero-copy">
-            Add exercises for this level. Users will see them on
-            <strong>/levels/<%= level.id %></strong>.
-          </p>
+          <p class="eyebrow"><%= t.manageExercisesTitle %></p>
+          <h1 dir="auto"><%= level.name %></h1>
+          <p class="hero-copy"><%= t.editLevelIntro %></p>
         </div>
         <div class="hero-actions">
           <form action="/admin/logout" method="POST">
-            <button class="button secondary" type="submit">Logout</button>
+            <button class="button secondary" type="submit"><%= t.logout %></button>
           </form>
-          <a class="button secondary" href="/admin">Back to Admin</a>
-          <a class="button" href="/levels/<%= level.id %>">Open User View</a>
+          <a class="button secondary" href="/admin"><%= t.backAdmin %></a>
+          <a class="button" href="/levels/<%= level.id %>"><%= t.openUserView %></a>
         </div>
       </header>
 
       <section class="panel">
         <div class="section-heading">
-          <h2>Add exercise</h2>
+          <h2><%= t.editLevel %></h2>
         </div>
 
         <% if (error) { %>
           <div class="alert"><%= error %></div>
         <% } %>
+
+        <% if (success) { %>
+          <div class="alert success"><%= success %></div>
+        <% } %>
+
+        <div class="form-grid">
+          <form class="form-grid inline-form" action="/admin/levels/<%= level.id %>/edit" method="POST">
+            <div class="field grow-field">
+              <label for="level-name"><%= t.levelName %></label>
+              <input id="level-name" name="name" type="text" value="<%= level.name %>" dir="auto" required />
+            </div>
+            <button class="button" type="submit"><%= t.saveChanges %></button>
+          </form>
+          <form action="/admin/levels/<%= level.id %>/delete" method="POST" onsubmit="return confirm('<%= t.deleteLevel %>?');">
+            <button class="button ghost-danger" type="submit"><%= t.deleteLevel %></button>
+          </form>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
+          <h2><%= t.addExercise %></h2>
+        </div>
 
         <form
           class="form-grid four-columns"
@@ -41,80 +67,86 @@
           method="POST"
         >
           <div class="field">
-            <label for="name">Exercise Name</label>
-            <input id="name" name="name" type="text" placeholder="Push Ups" required />
+            <label for="name"><%= t.exerciseName %></label>
+            <input id="name" name="name" type="text" placeholder="<%= t.exercisePlaceholder %>" dir="auto" required />
           </div>
           <div class="field">
-            <label for="reps_or_time">Reps or Time</label>
+            <label for="reps_or_time"><%= t.repsOrTime %></label>
             <input
               id="reps_or_time"
               name="reps_or_time"
               type="text"
-              placeholder="15 reps or 45 sec"
+              placeholder="<%= t.repsPlaceholder %>"
+              dir="auto"
               required
             />
           </div>
           <div class="field">
-            <label for="sets">Sets</label>
-            <input id="sets" name="sets" type="text" placeholder="3" required />
+            <label for="sets"><%= t.sets %></label>
+            <input id="sets" name="sets" type="text" placeholder="<%= t.setsPlaceholder %>" dir="auto" required />
           </div>
           <div class="field">
-            <label for="rest_time">Rest Time</label>
+            <label for="rest_time"><%= t.restTime %></label>
             <input
               id="rest_time"
               name="rest_time"
               type="text"
-              placeholder="30 sec"
+              placeholder="<%= t.restPlaceholder %>"
+              dir="auto"
               required
             />
           </div>
-          <button class="button" type="submit">Add Exercise</button>
+          <button class="button" type="submit"><%= t.addExerciseButton %></button>
         </form>
       </section>
 
       <section class="panel">
         <div class="section-heading">
-          <h2>Exercises</h2>
-          <span class="pill"><%= exercises.length %> item(s)</span>
+          <h2><%= t.exercises %></h2>
+          <span class="pill"><%= exercises.length %> <%= t.itemCount %></span>
         </div>
 
         <% if (exercises.length === 0) { %>
-          <p class="muted">No exercises added for this level yet.</p>
+          <p class="muted"><%= t.noLevelExercises %></p>
         <% } else { %>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Exercise Name</th>
-                  <th>Reps or Time</th>
-                  <th>Sets</th>
-                  <th>Rest Time</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% exercises.forEach((exercise) => { %>
-                  <tr>
-                    <td data-label="Exercise Name"><%= exercise.name %></td>
-                    <td data-label="Reps or Time"><%= exercise.reps_or_time %></td>
-                    <td data-label="Sets"><%= exercise.sets %></td>
-                    <td data-label="Rest Time"><%= exercise.rest_time %></td>
-                    <td data-label="Action">
-                      <form action="/admin/exercises/<%= exercise.id %>/delete" method="POST">
-                        <input type="hidden" name="level_id" value="<%= level.id %>" />
-                        <button class="button danger" type="submit">Delete</button>
-                      </form>
-                    </td>
-                  </tr>
-                <% }) %>
-              </tbody>
-            </table>
+          <div class="exercise-editor-list">
+            <% exercises.forEach((exercise) => { %>
+              <article class="exercise-editor-card">
+                <form class="exercise-editor-grid" action="/admin/exercises/<%= exercise.id %>/edit" method="POST">
+                  <input type="hidden" name="level_id" value="<%= level.id %>" />
+                  <div class="field">
+                    <label for="exercise-name-<%= exercise.id %>"><%= t.exerciseName %></label>
+                    <input id="exercise-name-<%= exercise.id %>" name="name" type="text" value="<%= exercise.name %>" dir="auto" required />
+                  </div>
+                  <div class="field">
+                    <label for="exercise-reps-<%= exercise.id %>"><%= t.repsOrTime %></label>
+                    <input id="exercise-reps-<%= exercise.id %>" name="reps_or_time" type="text" value="<%= exercise.reps_or_time %>" dir="auto" required />
+                  </div>
+                  <div class="field">
+                    <label for="exercise-sets-<%= exercise.id %>"><%= t.sets %></label>
+                    <input id="exercise-sets-<%= exercise.id %>" name="sets" type="text" value="<%= exercise.sets %>" dir="auto" required />
+                  </div>
+                  <div class="field">
+                    <label for="exercise-rest-<%= exercise.id %>"><%= t.restTime %></label>
+                    <input id="exercise-rest-<%= exercise.id %>" name="rest_time" type="text" value="<%= exercise.rest_time %>" dir="auto" required />
+                  </div>
+                  <div class="exercise-card-actions">
+                    <button class="button" type="submit"><%= t.edit %></button>
+                  </div>
+                </form>
+                <form action="/admin/exercises/<%= exercise.id %>/delete" method="POST" onsubmit="return confirm('<%= t.delete %>?');">
+                  <input type="hidden" name="level_id" value="<%= level.id %>" />
+                  <button class="button ghost-danger exercise-delete-button" type="submit"><%= t.delete %></button>
+                </form>
+              </article>
+            <% }) %>
           </div>
         <% } %>
       </section>
 
-      <footer class="project-signature" dir="rtl">
-        <p>قام بتنفيذ هذا المشروع البسيط المهندس علي الشريف</p>
+      <footer class="project-signature contact-footer">
+        <p><%= t.footerMarketing %></p>
+        <a class="button whatsapp-button" href="https://wa.me/201036178517" target="_blank" rel="noopener noreferrer"><%= t.contactWhatsApp %></a>
       </footer>
     </div>
   </body>

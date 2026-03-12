@@ -1,29 +1,33 @@
-<!DOCTYPE html>
-<html lang="en">
+﻿<!DOCTYPE html>
+<html lang="<%= lang %>" dir="<%= dir %>">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin Login</title>
+    <meta name="theme-color" content="#1f7a55" />
+    <title><%= t.adminAccess %></title>
     <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
     <div class="page-shell">
+      <div class="lang-switcher" dir="ltr">
+        <a class="lang-pill <%= lang === 'ar' ? 'active' : '' %>" href="<%= switchToArabicHref %>"><%= t.langArabic %></a>
+        <a class="lang-pill <%= lang === 'en' ? 'active' : '' %>" href="<%= switchToEnglishHref %>"><%= t.langEnglish %></a>
+      </div>
+
       <header class="hero compact">
         <div>
-          <p class="eyebrow">Admin Access</p>
-          <h1>Sign in to the admin panel</h1>
-          <p class="hero-copy">
-            The admin dashboard uses a session cookie after successful login.
-          </p>
+          <p class="eyebrow"><%= t.adminAccess %></p>
+          <h1><%= t.adminLoginTitle %></h1>
+          <p class="hero-copy"><%= t.adminLoginIntro %></p>
         </div>
         <div class="hero-actions">
-          <a class="button secondary" href="/">Back to Home</a>
+          <a class="button secondary" href="/"><%= t.backHome %></a>
         </div>
       </header>
 
       <section class="panel auth-panel">
         <div class="section-heading">
-          <h2>Admin Login</h2>
+          <h2><%= t.loginDetails %></h2>
         </div>
 
         <% if (error) { %>
@@ -32,34 +36,37 @@
 
         <form class="form-grid" action="/admin/login" method="POST">
           <div class="field">
-            <label for="email">Email</label>
+            <label for="email"><%= t.email %></label>
             <input
               id="email"
               name="email"
               type="email"
               placeholder="admin@fitness.com"
               value="<%= email %>"
+              dir="ltr"
               required
             />
           </div>
 
           <div class="field">
-            <label for="password">Password</label>
+            <label for="password"><%= t.password %></label>
             <input
               id="password"
               name="password"
               type="password"
-              placeholder="Enter your password"
+              placeholder="<%= t.passwordPlaceholder %>"
+              dir="auto"
               required
             />
           </div>
 
-          <button class="button" type="submit">Login</button>
+          <button class="button" type="submit"><%= t.login %></button>
         </form>
       </section>
 
-      <footer class="project-signature" dir="rtl">
-        <p>قام بتنفيذ هذا المشروع البسيط المهندس علي الشريف</p>
+      <footer class="project-signature contact-footer">
+        <p><%= t.footerMarketing %></p>
+        <a class="button whatsapp-button" href="https://wa.me/201036178517" target="_blank" rel="noopener noreferrer"><%= t.contactWhatsApp %></a>
       </footer>
     </div>
   </body>

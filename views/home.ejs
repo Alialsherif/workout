@@ -1,51 +1,59 @@
-<!DOCTYPE html>
-<html lang="en">
+﻿<!DOCTYPE html>
+<html lang="<%= lang %>" dir="<%= dir %>">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Workout Training System</title>
+    <meta name="theme-color" content="#1f7a55" />
+    <title><%= t.siteTitle %></title>
     <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
     <div class="page-shell">
+      <div class="lang-switcher" dir="ltr">
+        <a class="lang-pill <%= lang === 'ar' ? 'active' : '' %>" href="<%= switchToArabicHref %>"><%= t.langArabic %></a>
+        <a class="lang-pill <%= lang === 'en' ? 'active' : '' %>" href="<%= switchToEnglishHref %>"><%= t.langEnglish %></a>
+      </div>
+
       <header class="hero">
         <div>
           <p class="eyebrow">Workout Training System</p>
-          <h1>Choose your training level</h1>
-          <p class="hero-copy">
-            Browse the available workout plans and open a level to start your
-            session.
-          </p>
+          <h1><%= t.chooseTrainingLevel %></h1>
+          <p class="hero-copy"><%= t.homeIntro %></p>
         </div>
-        <a class="button secondary" href="/admin/login">Open Admin Panel</a>
+        <% if (isAdminAuthenticated) { %>
+          <a class="button secondary" href="/admin"><%= t.openAdminDashboard %></a>
+        <% } else { %>
+          <a class="button secondary" href="/admin/login"><%= t.openAdminPanel %></a>
+        <% } %>
       </header>
 
       <section class="panel">
         <div class="section-heading">
-          <h2>Available levels</h2>
-          <span class="pill"><%= levels.length %> level(s)</span>
+          <h2><%= t.availableLevels %></h2>
+          <span class="pill"><%= levels.length %> <%= t.levelCount %></span>
         </div>
 
         <% if (levels.length === 0) { %>
           <div class="empty-state">
-            <p>No levels available yet.</p>
-            <a class="button" href="/admin/login">Create the first level</a>
+            <p><%= t.noLevels %></p>
+            <a class="button" href="<%= isAdminAuthenticated ? '/admin' : '/admin/login' %>"><%= t.addFirstLevel %></a>
           </div>
         <% } else { %>
           <div class="level-grid">
             <% levels.forEach((level) => { %>
               <a class="level-card" href="/levels/<%= level.id %>">
-                <span class="card-badge">Level <%= level.id %></span>
-                <h3><%= level.name %></h3>
-                <p>Open this plan and track your completed exercises.</p>
+                <span class="card-badge"><%= t.levelLabel %> <%= level.id %></span>
+                <h3 dir="auto"><%= level.name %></h3>
+                <p><%= t.levelCardCopy %></p>
               </a>
             <% }) %>
           </div>
         <% } %>
       </section>
 
-      <footer class="project-signature" dir="rtl">
-        <p>قام بتنفيذ هذا المشروع البسيط المهندس علي الشريف</p>
+      <footer class="project-signature contact-footer">
+        <p><%= t.footerMarketing %></p>
+        <a class="button whatsapp-button" href="https://wa.me/201036178517" target="_blank" rel="noopener noreferrer"><%= t.contactWhatsApp %></a>
       </footer>
     </div>
   </body>
