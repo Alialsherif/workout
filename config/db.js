@@ -64,6 +64,10 @@ function sortByIdAsc(items) {
 }
 
 const db = {
+  exportData() {
+    return JSON.parse(JSON.stringify(state));
+  },
+
   all(query, params, callback) {
     const actualParams = Array.isArray(params) ? params : [];
     const actualCallback = typeof params === "function" ? params : callback;

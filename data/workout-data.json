@@ -1,6 +1,40 @@
 {
-  "levels": [],
-  "exercises": [],
-  "nextLevelId": 1,
-  "nextExerciseId": 1
+  "levels": [
+    {
+      "id": 2,
+      "name": "push55"
+    },
+    {
+      "id": 3,
+      "name": "push jj"
+    }
+  ],
+  "exercises": [
+    {
+      "id": 3,
+      "level_id": 2,
+      "name": "push jj",
+      "reps_or_time": "15",
+      "sets": "3",
+      "rest_time": "24 ساعة"
+    },
+    {
+      "id": 4,
+      "level_id": 2,
+      "name": "التمرين الاول",
+      "reps_or_time": "15",
+      "sets": "35",
+      "rest_time": "24 ساعة"
+    },
+    {
+      "id": 5,
+      "level_id": 3,
+      "name": "push jj",
+      "reps_or_time": "15",
+      "sets": "3",
+      "rest_time": "24 ساعة"
+    }
+  ],
+  "nextLevelId": 4,
+  "nextExerciseId": 6
 }

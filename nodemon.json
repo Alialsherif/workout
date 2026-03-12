@@ -1,0 +1,13 @@
+{
+  "watch": [
+    "app.js",
+    "config",
+    "views",
+    "public"
+  ],
+  "ignore": [
+    "data/*",
+    "node_modules/*",
+    ".git/*"
+  ]
+}

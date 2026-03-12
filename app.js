@@ -1,14 +1,80 @@
-﻿const path = require("path");
+const path = require("path");
+const fs = require("fs");
+const crypto = require("crypto");
 const express = require("express");
 const session = require("express-session");
 const db = require("./config/db");
+const FileSessionStore = require("./config/session-store");
+
+function loadEnvFile() {
+  const envFilePath = path.join(__dirname, ".env");
+
+  if (!fs.existsSync(envFilePath)) {
+    return;
+  }
+
+  const envLines = fs.readFileSync(envFilePath, "utf8").split(/\r?\n/);
+
+  for (const line of envLines) {
+    const trimmedLine = line.trim();
+
+    if (!trimmedLine || trimmedLine.startsWith("#")) {
+      continue;
+    }
+
+    const separatorIndex = trimmedLine.indexOf("=");
+
+    if (separatorIndex === -1) {
+      continue;
+    }
+
+    const key = trimmedLine.slice(0, separatorIndex).trim();
+    const rawValue = trimmedLine.slice(separatorIndex + 1).trim();
+    const normalizedValue = rawValue.replace(/^['\"]|['\"]$/g, "");
+
+    if (key && process.env[key] === undefined) {
+      process.env[key] = normalizedValue;
+    }
+  }
+}
+
+function hashPassword(password, salt) {
+  return crypto.scryptSync(password, salt, 64).toString("hex");
+}
+
+function isSecureEqual(firstValue, secondValue) {
+  const firstBuffer = Buffer.from(firstValue, "hex");
+  const secondBuffer = Buffer.from(secondValue, "hex");
+
+  if (firstBuffer.length !== secondBuffer.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(firstBuffer, secondBuffer);
+}
+
+function normalizeEmail(email) {
+  return String(email || "").trim().toLowerCase();
+}
+
+loadEnvFile();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@fitness.com";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Admin123!";
-const SESSION_SECRET = process.env.SESSION_SECRET || "fitness-app-secret";
+const ADMIN_EMAIL = normalizeEmail(process.env.ADMIN_EMAIL);
+const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || "";
+const ADMIN_PASSWORD_SALT = process.env.ADMIN_PASSWORD_SALT || "";
+const SESSION_SECRET = process.env.SESSION_SECRET || "";
 const DEFAULT_LANG = "ar";
+const isAdminAuthConfigured = Boolean(
+  ADMIN_EMAIL && ADMIN_PASSWORD_HASH && ADMIN_PASSWORD_SALT && SESSION_SECRET
+);
+
+if (!isAdminAuthConfigured) {
+  console.warn(
+    "Admin authentication is not fully configured. Set ADMIN_EMAIL, ADMIN_PASSWORD_HASH, ADMIN_PASSWORD_SALT, and SESSION_SECRET in .env."
+  );
+}
 
 const translations = {
   ar: {
@@ -177,7 +243,7 @@ const translations = {
     password: "Password",
     passwordPlaceholder: "Enter your password",
     login: "Login",
-    langArabic: "العربية",
+    langArabic: "???????",
     langEnglish: "English",
     invalidCredentials: "Invalid email or password.",
     levelNameRequired: "Level name is required.",
@@ -210,7 +276,8 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.urlencoded({ extended: true }));
 app.use(
   session({
-    secret: SESSION_SECRET,
+    secret: SESSION_SECRET || crypto.randomBytes(32).toString("hex"),
+    store: new FileSessionStore(),
     resave: false,
     saveUninitialized: false,
     rolling: true,
@@ -372,8 +439,16 @@ app.get("/admin/login", (req, res) => {
 app.post("/admin/login", (req, res) => {
   const email = req.body.email ? req.body.email.trim() : "";
   const password = req.body.password ? req.body.password.trim() : "";
+  const normalizedEmail = normalizeEmail(email);
+  const hashedPassword = isAdminAuthConfigured
+    ? hashPassword(password, ADMIN_PASSWORD_SALT)
+    : "";
+  const isValidLogin =
+    isAdminAuthConfigured &&
+    normalizedEmail === ADMIN_EMAIL &&
+    isSecureEqual(hashedPassword, ADMIN_PASSWORD_HASH);
 
-  if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+  if (isValidLogin) {
     req.session.admin = { email };
     res.redirect("/admin");
     return;
@@ -638,3 +713,5 @@ app.use((error, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
+
