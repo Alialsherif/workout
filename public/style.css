@@ -291,6 +291,17 @@ a {
   background: #fbfdfb;
 }
 
+.project-signature {
+  margin-top: 22px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.project-signature p {
+  margin: 0;
+}
+
 .table-wrap {
   overflow-x: auto;
 }
