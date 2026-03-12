@@ -46,8 +46,8 @@
                 </tr>
               </thead>
               <tbody id="pending-exercises">
-                <% exercises.forEach((exercise) => { %>
-                  <tr data-exercise-id="<%= exercise.id %>">
+                <% exercises.forEach((exercise, index) => { %>
+                  <tr data-exercise-id="<%= exercise.id %>" data-order="<%= index %>">
                     <td data-label="<%= t.exerciseName %>" dir="auto"><%= exercise.name %></td>
                     <td data-label="<%= t.repsOrTime %>" dir="auto"><%= exercise.reps_or_time %></td>
                     <td data-label="<%= t.sets %>" dir="auto"><%= exercise.sets %></td>
@@ -143,6 +143,19 @@
             completedEmpty.hidden = hasCompleted;
           }
 
+          function insertRowInOrder(container, row) {
+            const rowOrder = Number(row.dataset.order);
+            const rows = Array.from(container.querySelectorAll("tr"));
+            const nextRow = rows.find((item) => Number(item.dataset.order) > rowOrder);
+
+            if (nextRow) {
+              container.insertBefore(row, nextRow);
+              return;
+            }
+
+            container.appendChild(row);
+          }
+
           function moveRow(checkbox) {
             const row = checkbox.closest("tr");
             if (!row) {
@@ -151,10 +164,10 @@
 
             if (checkbox.checked) {
               row.classList.add("is-complete");
-              completedBody.appendChild(row);
+              insertRowInOrder(completedBody, row);
             } else {
               row.classList.remove("is-complete");
-              pendingBody.appendChild(row);
+              insertRowInOrder(pendingBody, row);
             }
 
             refreshCounts();

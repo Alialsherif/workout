@@ -292,6 +292,18 @@ function getExercisesByLevel(levelId) {
   });
 }
 
+async function getLevelsWithExercises() {
+  const levels = await getLevels();
+  const levelsWithExercises = await Promise.all(
+    levels.map(async (level) => ({
+      ...level,
+      exercises: await getExercisesByLevel(level.id)
+    }))
+  );
+
+  return levelsWithExercises;
+}
+
 function updateLevel(levelId, name) {
   return new Promise((resolve, reject) => {
     db.run("UPDATE levels SET name = ? WHERE id = ?", [name, levelId], (error) => {
@@ -330,6 +342,10 @@ function updateExercise(exerciseId, payload) {
       }
     );
   });
+}
+
+function adminLevelAnchor(levelId) {
+  return `/admin#level-${levelId}`;
 }
 
 app.get("/", async (req, res, next) => {
@@ -377,24 +393,26 @@ app.post("/admin/logout", (req, res) => {
 
 app.get("/admin", ensureAdmin, async (req, res, next) => {
   try {
-    const levels = await getLevels();
+    const levels = await getLevelsWithExercises();
     res.render("admin", { levels, error: null, success: null });
   } catch (error) {
     next(error);
   }
 });
 
-app.post("/admin/levels", ensureAdmin, (req, res) => {
+app.post("/admin/levels", ensureAdmin, (req, res, next) => {
   const name = req.body.name ? req.body.name.trim() : "";
 
   if (!name) {
-    db.all("SELECT * FROM levels ORDER BY id ASC", (error, rows) => {
-      res.status(400).render("admin", {
-        levels: error ? [] : rows,
-        error: t(req.session.lang, "levelNameRequired"),
-        success: null
-      });
-    });
+    getLevelsWithExercises()
+      .then((levels) => {
+        res.status(400).render("admin", {
+          levels,
+          error: t(req.session.lang, "levelNameRequired"),
+          success: null
+        });
+      })
+      .catch(next);
     return;
   }
 
@@ -416,7 +434,7 @@ app.get("/admin/levels/:id", ensureAdmin, async (req, res, next) => {
     ]);
 
     if (!level) {
-      res.status(404).send(t(req.session.lang, "levelNotFound"));
+      res.redirect("/admin");
       return;
     }
 
@@ -432,19 +450,16 @@ app.post("/admin/levels/:id/edit", ensureAdmin, async (req, res, next) => {
 
   if (!name) {
     try {
-      const [level, exercises] = await Promise.all([
-        getLevelById(levelId),
-        getExercisesByLevel(levelId)
-      ]);
+      const levels = await getLevelsWithExercises();
+      const level = levels.find((item) => item.id === levelId);
 
       if (!level) {
         res.status(404).send(t(req.session.lang, "levelNotFound"));
         return;
       }
 
-      res.status(400).render("edit-level", {
-        level,
-        exercises,
+      res.status(400).render("admin", {
+        levels,
         error: t(req.session.lang, "levelNameRequired"),
         success: null
       });
@@ -456,14 +471,10 @@ app.post("/admin/levels/:id/edit", ensureAdmin, async (req, res, next) => {
 
   try {
     await updateLevel(levelId, name);
-    const [level, exercises] = await Promise.all([
-      getLevelById(levelId),
-      getExercisesByLevel(levelId)
-    ]);
+    const levels = await getLevelsWithExercises();
 
-    res.render("edit-level", {
-      level,
-      exercises,
+    res.render("admin", {
+      levels,
       error: null,
       success: t(req.session.lang, "levelUpdated")
     });
@@ -497,14 +508,9 @@ app.post("/admin/levels/:id/exercises", ensureAdmin, async (req, res, next) => {
 
   if (!name || !repsOrTime || !sets || !restTime) {
     try {
-      const [level, exercises] = await Promise.all([
-        getLevelById(levelId),
-        getExercisesByLevel(levelId)
-      ]);
-
-      res.status(400).render("edit-level", {
-        level,
-        exercises,
+      const levels = await getLevelsWithExercises();
+      res.status(400).render("admin", {
+        levels,
         error: t(req.session.lang, "exerciseFieldsRequired"),
         success: null
       });
@@ -523,7 +529,7 @@ app.post("/admin/levels/:id/exercises", ensureAdmin, async (req, res, next) => {
         res.status(500).send(t(req.session.lang, "addExerciseFailed"));
         return;
       }
-      res.redirect(`/admin/levels/${levelId}`);
+      res.redirect(adminLevelAnchor(levelId));
     }
   );
 });
@@ -538,19 +544,16 @@ app.post("/admin/exercises/:id/edit", ensureAdmin, async (req, res, next) => {
 
   if (!name || !repsOrTime || !sets || !restTime) {
     try {
-      const [level, exercises] = await Promise.all([
-        getLevelById(levelId),
-        getExercisesByLevel(levelId)
-      ]);
+      const levels = await getLevelsWithExercises();
+      const level = levels.find((item) => item.id === levelId);
 
       if (!level) {
         res.status(404).send(t(req.session.lang, "levelNotFound"));
         return;
       }
 
-      res.status(400).render("edit-level", {
-        level,
-        exercises,
+      res.status(400).render("admin", {
+        levels,
         error: t(req.session.lang, "exerciseFieldsRequired"),
         success: null
       });
@@ -568,19 +571,16 @@ app.post("/admin/exercises/:id/edit", ensureAdmin, async (req, res, next) => {
       restTime
     });
 
-    const [level, exercises] = await Promise.all([
-      getLevelById(levelId),
-      getExercisesByLevel(levelId)
-    ]);
+    const levels = await getLevelsWithExercises();
+    const level = levels.find((item) => item.id === levelId);
 
     if (!level) {
       res.status(404).send(t(req.session.lang, "levelNotFound"));
       return;
     }
 
-    res.render("edit-level", {
-      level,
-      exercises,
+    res.render("admin", {
+      levels,
       error: null,
       success: t(req.session.lang, "exerciseUpdated")
     });
@@ -603,7 +603,7 @@ app.post("/admin/exercises/:id/delete", ensureAdmin, (req, res) => {
       res.status(500).send(t(req.session.lang, "deleteExerciseFailed"));
       return;
     }
-    res.redirect(`/admin/levels/${levelId}`);
+    res.redirect(adminLevelAnchor(levelId));
   });
 });
 
@@ -616,7 +616,7 @@ app.get("/levels/:id", async (req, res, next) => {
     ]);
 
     if (!level) {
-      res.status(404).send(t(req.session.lang, "levelNotFound"));
+      res.redirect("/");
       return;
     }
 

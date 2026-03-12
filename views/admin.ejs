@@ -28,65 +28,124 @@
         </div>
       </header>
 
-      <div class="admin-layout">
-        <section class="panel">
-          <div class="section-heading">
-            <h2><%= t.addNewLevel %></h2>
+      <section class="panel">
+        <div class="section-heading">
+          <h2><%= t.addNewLevel %></h2>
+        </div>
+
+        <% if (error) { %>
+          <div class="alert"><%= error %></div>
+        <% } %>
+
+        <% if (success) { %>
+          <div class="alert success"><%= success %></div>
+        <% } %>
+
+        <form class="form-grid" action="/admin/levels" method="POST">
+          <div class="field">
+            <label for="name"><%= t.levelName %></label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              placeholder="<%= t.levelPlaceholder %>"
+              dir="auto"
+              required
+            />
           </div>
+          <button class="button" type="submit"><%= t.addLevel %></button>
+        </form>
+      </section>
 
-          <% if (error) { %>
-            <div class="alert"><%= error %></div>
-          <% } %>
+      <section class="panel">
+        <div class="section-heading">
+          <h2><%= t.allLevels %></h2>
+          <span class="pill"><%= levels.length %> <%= t.total %></span>
+        </div>
 
-          <% if (success) { %>
-            <div class="alert success"><%= success %></div>
-          <% } %>
-
-          <form class="form-grid" action="/admin/levels" method="POST">
-            <div class="field">
-              <label for="name"><%= t.levelName %></label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                placeholder="<%= t.levelPlaceholder %>"
-                dir="auto"
-                required
-              />
-            </div>
-            <button class="button" type="submit"><%= t.addLevel %></button>
-          </form>
-        </section>
-
-        <section class="panel">
-          <div class="section-heading">
-            <h2><%= t.allLevels %></h2>
-            <span class="pill"><%= levels.length %> <%= t.total %></span>
-          </div>
-
-          <% if (levels.length === 0) { %>
-            <p class="muted"><%= t.noLevelsCreated %></p>
-          <% } else { %>
-            <div class="stack-list">
-              <% levels.forEach((level) => { %>
-                <div class="list-item">
-                  <div>
-                    <p class="list-title" dir="auto"><%= level.name %></p>
-                    <p class="muted" dir="ltr">/levels/<%= level.id %></p>
-                  </div>
+        <% if (levels.length === 0) { %>
+          <p class="muted"><%= t.noLevelsCreated %></p>
+        <% } else { %>
+          <div class="exercise-editor-list">
+            <% levels.forEach((level) => { %>
+              <article class="exercise-editor-card level-admin-card" id="level-<%= level.id %>">
+                <div class="level-admin-header">
+                  <form class="form-grid inline-form level-inline-form" action="/admin/levels/<%= level.id %>/edit" method="POST">
+                    <div class="field grow-field">
+                      <label for="level-name-<%= level.id %>"><%= t.levelName %></label>
+                      <input id="level-name-<%= level.id %>" name="name" type="text" value="<%= level.name %>" dir="auto" required />
+                    </div>
+                    <button class="button secondary" type="submit"><%= t.saveChanges %></button>
+                  </form>
                   <div class="list-actions">
                     <a class="button secondary" href="/levels/<%= level.id %>"><%= t.view %></a>
-                    <a class="button" href="/admin/levels/<%= level.id %>"><%= t.manageExercises %></a>
                     <form action="/admin/levels/<%= level.id %>/delete" method="POST" onsubmit="return confirm('<%= t.deleteLevel %>?');">
                       <button class="button ghost-danger" type="submit"><%= t.deleteLevel %></button>
                     </form>
                   </div>
                 </div>
-              <% }) %>
-            </div>
-          <% } %>
-        </section>
-      </div>
+
+                <form class="form-grid four-columns inline-level-exercise-form" action="/admin/levels/<%= level.id %>/exercises" method="POST">
+                  <div class="field">
+                    <label for="name-<%= level.id %>"><%= t.exerciseName %></label>
+                    <input id="name-<%= level.id %>" name="name" type="text" placeholder="<%= t.exercisePlaceholder %>" dir="auto" required />
+                  </div>
+                  <div class="field">
+                    <label for="reps_or_time-<%= level.id %>"><%= t.repsOrTime %></label>
+                    <input id="reps_or_time-<%= level.id %>" name="reps_or_time" type="text" placeholder="<%= t.repsPlaceholder %>" dir="auto" required />
+                  </div>
+                  <div class="field">
+                    <label for="sets-<%= level.id %>"><%= t.sets %></label>
+                    <input id="sets-<%= level.id %>" name="sets" type="text" placeholder="<%= t.setsPlaceholder %>" dir="auto" required />
+                  </div>
+                  <div class="field">
+                    <label for="rest_time-<%= level.id %>"><%= t.restTime %></label>
+                    <input id="rest_time-<%= level.id %>" name="rest_time" type="text" placeholder="<%= t.restPlaceholder %>" dir="auto" required />
+                  </div>
+                  <button class="button" type="submit"><%= t.addExerciseButton %></button>
+                </form>
+
+                <% if (level.exercises.length === 0) { %>
+                  <p class="muted"><%= t.noLevelExercises %></p>
+                <% } else { %>
+                  <div class="exercise-editor-list nested-exercise-list">
+                    <% level.exercises.forEach((exercise) => { %>
+                      <article class="mini-exercise-item mini-exercise-editor">
+                        <form class="exercise-editor-grid" action="/admin/exercises/<%= exercise.id %>/edit" method="POST">
+                          <input type="hidden" name="level_id" value="<%= level.id %>" />
+                          <div class="field">
+                            <label for="exercise-name-<%= exercise.id %>"><%= t.exerciseName %></label>
+                            <input id="exercise-name-<%= exercise.id %>" name="name" type="text" value="<%= exercise.name %>" dir="auto" required />
+                          </div>
+                          <div class="field">
+                            <label for="exercise-reps-<%= exercise.id %>"><%= t.repsOrTime %></label>
+                            <input id="exercise-reps-<%= exercise.id %>" name="reps_or_time" type="text" value="<%= exercise.reps_or_time %>" dir="auto" required />
+                          </div>
+                          <div class="field">
+                            <label for="exercise-sets-<%= exercise.id %>"><%= t.sets %></label>
+                            <input id="exercise-sets-<%= exercise.id %>" name="sets" type="text" value="<%= exercise.sets %>" dir="auto" required />
+                          </div>
+                          <div class="field">
+                            <label for="exercise-rest-<%= exercise.id %>"><%= t.restTime %></label>
+                            <input id="exercise-rest-<%= exercise.id %>" name="rest_time" type="text" value="<%= exercise.rest_time %>" dir="auto" required />
+                          </div>
+                          <div class="exercise-card-actions">
+                            <button class="button secondary" type="submit"><%= t.edit %></button>
+                          </div>
+                        </form>
+                        <form action="/admin/exercises/<%= exercise.id %>/delete" method="POST" onsubmit="return confirm('<%= t.delete %>?');">
+                          <input type="hidden" name="level_id" value="<%= level.id %>" />
+                          <button class="button ghost-danger exercise-delete-button" type="submit"><%= t.delete %></button>
+                        </form>
+                      </article>
+                    <% }) %>
+                  </div>
+                <% } %>
+              </article>
+            <% }) %>
+          </div>
+        <% } %>
+      </section>
 
       <footer class="project-signature contact-footer">
         <p><%= t.footerMarketing %></p>
