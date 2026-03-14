@@ -2,18 +2,18 @@
   "levels": [
     {
       "id": 2,
-      "name": "push55"
+      "name": "المستوي الاول"
     },
     {
       "id": 3,
-      "name": "push jj"
+      "name": "المستوي الثاني"
     }
   ],
   "exercises": [
     {
       "id": 3,
       "level_id": 2,
-      "name": "push jj",
+      "name": "التميرن الاول",
       "reps_or_time": "15",
       "sets": "3",
       "rest_time": "24 ساعة"
@@ -21,7 +21,7 @@
     {
       "id": 4,
       "level_id": 2,
-      "name": "التمرين الاول",
+      "name": "التمرين الثاني",
       "reps_or_time": "15",
       "sets": "35",
       "rest_time": "24 ساعة"
@@ -29,12 +29,17 @@
     {
       "id": 5,
       "level_id": 3,
-      "name": "push jj",
+      "name": "المرين الاول المستوي الثاني",
       "reps_or_time": "15",
       "sets": "3",
       "rest_time": "24 ساعة"
     }
   ],
+  "progress": {
+    "hp4TKNwmR62L_7D8uNamQvw0143bTKWs": {
+      "2": []
+    }
+  },
   "nextLevelId": 4,
   "nextExerciseId": 6
 }

@@ -57,6 +57,24 @@ function normalizeEmail(email) {
   return String(email || "").trim().toLowerCase();
 }
 
+function getPersistentSessionSecret() {
+  const secretFilePath = path.join(__dirname, "data", "session-secret.txt");
+
+  if (process.env.SESSION_SECRET) {
+    return process.env.SESSION_SECRET;
+  }
+
+  if (!fs.existsSync(path.dirname(secretFilePath))) {
+    fs.mkdirSync(path.dirname(secretFilePath), { recursive: true });
+  }
+
+  if (!fs.existsSync(secretFilePath)) {
+    fs.writeFileSync(secretFilePath, crypto.randomBytes(32).toString("hex"), "utf8");
+  }
+
+  return fs.readFileSync(secretFilePath, "utf8").trim();
+}
+
 loadEnvFile();
 
 const app = express();
@@ -64,15 +82,15 @@ const PORT = process.env.PORT || 3000;
 const ADMIN_EMAIL = normalizeEmail(process.env.ADMIN_EMAIL);
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || "";
 const ADMIN_PASSWORD_SALT = process.env.ADMIN_PASSWORD_SALT || "";
-const SESSION_SECRET = process.env.SESSION_SECRET || "";
+const SESSION_SECRET = getPersistentSessionSecret();
 const DEFAULT_LANG = "ar";
 const isAdminAuthConfigured = Boolean(
-  ADMIN_EMAIL && ADMIN_PASSWORD_HASH && ADMIN_PASSWORD_SALT && SESSION_SECRET
+  ADMIN_EMAIL && ADMIN_PASSWORD_HASH && ADMIN_PASSWORD_SALT
 );
 
 if (!isAdminAuthConfigured) {
   console.warn(
-    "Admin authentication is not fully configured. Set ADMIN_EMAIL, ADMIN_PASSWORD_HASH, ADMIN_PASSWORD_SALT, and SESSION_SECRET in .env."
+    "Admin authentication is not fully configured. Set ADMIN_EMAIL, ADMIN_PASSWORD_HASH, and ADMIN_PASSWORD_SALT in .env."
   );
 }
 
@@ -243,7 +261,7 @@ const translations = {
     password: "Password",
     passwordPlaceholder: "Enter your password",
     login: "Login",
-    langArabic: "???????",
+    langArabic: "العربية",
     langEnglish: "English",
     invalidCredentials: "Invalid email or password.",
     levelNameRequired: "Level name is required.",
@@ -276,7 +294,7 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.urlencoded({ extended: true }));
 app.use(
   session({
-    secret: SESSION_SECRET || crypto.randomBytes(32).toString("hex"),
+    secret: SESSION_SECRET,
     store: new FileSessionStore(),
     resave: false,
     saveUninitialized: false,
@@ -413,6 +431,16 @@ function updateExercise(exerciseId, payload) {
 
 function adminLevelAnchor(levelId) {
   return `/admin#level-${levelId}`;
+}
+
+function normalizeCompletedExerciseIds(exercises, completedExerciseIds) {
+  const validExerciseIds = new Set(exercises.map((exercise) => exercise.id));
+
+  return [...new Set(
+    (Array.isArray(completedExerciseIds) ? completedExerciseIds : [])
+      .map((value) => Number(value))
+      .filter((value) => Number.isInteger(value) && validExerciseIds.has(value))
+  )].sort((first, second) => first - second);
 }
 
 app.get("/", async (req, res, next) => {
@@ -695,7 +723,64 @@ app.get("/levels/:id", async (req, res, next) => {
       return;
     }
 
+    if (!req.session.progressTracker) {
+      req.session.progressTracker = true;
+    }
+
     res.render("level", { level, exercises });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/levels/:id/progress", async (req, res, next) => {
+  try {
+    const levelId = Number(req.params.id);
+    const [level, exercises] = await Promise.all([
+      getLevelById(levelId),
+      getExercisesByLevel(levelId)
+    ]);
+
+    if (!level) {
+      res.status(404).json({ error: "Level not found." });
+      return;
+    }
+
+    const completedExerciseIds = normalizeCompletedExerciseIds(
+      exercises,
+      db.getLevelProgress(req.sessionID, levelId)
+    );
+
+    res.json({ completedExerciseIds });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/levels/:id/progress", express.json(), async (req, res, next) => {
+  try {
+    const levelId = Number(req.params.id);
+    const [level, exercises] = await Promise.all([
+      getLevelById(levelId),
+      getExercisesByLevel(levelId)
+    ]);
+
+    if (!level) {
+      res.status(404).json({ error: "Level not found." });
+      return;
+    }
+
+    if (!req.session.progressTracker) {
+      req.session.progressTracker = true;
+    }
+
+    const completedExerciseIds = normalizeCompletedExerciseIds(
+      exercises,
+      req.body ? req.body.completedExerciseIds : []
+    );
+
+    db.saveLevelProgress(req.sessionID, levelId, completedExerciseIds);
+    res.json({ completedExerciseIds });
   } catch (error) {
     next(error);
   }

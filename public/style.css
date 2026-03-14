@@ -550,11 +550,56 @@ table {
   min-width: 720px;
 }
 
+.workout-table {
+  table-layout: auto;
+}
+
+.workout-table .col-exercise {
+  width: 34%;
+}
+
+.workout-table .col-reps {
+  width: 24%;
+}
+
+.workout-table .col-sets {
+  width: 12%;
+}
+
+.workout-table .col-rest {
+  width: 18%;
+}
+
+.workout-table .col-done {
+  width: 12%;
+}
+
 th,
 td {
   padding: 14px 16px;
   text-align: start;
   border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.workout-table td {
+  overflow-wrap: anywhere;
+}
+
+.table-cell-value {
+  display: inline-block;
+  width: 100%;
+}
+
+.workout-table th:nth-child(2),
+.workout-table th:nth-child(3),
+.workout-table th:nth-child(4),
+.workout-table th:nth-child(5),
+.workout-table td:nth-child(2),
+.workout-table td:nth-child(3),
+.workout-table td:nth-child(4),
+.workout-table td:nth-child(5) {
+  text-align: center;
 }
 
 th {
@@ -700,9 +745,9 @@ tbody tr:hover {
 
   td {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 16px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
     padding: 12px 0;
     border-bottom: 1px solid var(--border);
     text-align: start;
@@ -714,11 +759,17 @@ tbody tr:hover {
 
   td::before {
     content: attr(data-label);
+    display: block;
     font-size: 0.82rem;
     font-weight: 700;
     color: var(--muted);
     letter-spacing: 0.02em;
-    flex: 0 0 42%;
+    flex: none;
+  }
+
+  .table-cell-value {
+    display: block;
+    width: 100%;
   }
 
   td form {
@@ -726,6 +777,7 @@ tbody tr:hover {
   }
 
   .checkbox-cell {
-    margin-inline-start: auto;
+    margin-inline-start: 0;
+    justify-content: flex-start;
   }
 }

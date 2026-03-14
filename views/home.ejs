@@ -42,7 +42,7 @@
           <div class="level-grid">
             <% levels.forEach((level) => { %>
               <a class="level-card" href="/levels/<%= level.id %>">
-                <span class="card-badge"><%= t.levelLabel %> <%= level.id %></span>
+                <span class="card-badge" dir="auto"><%= level.name %></span>
                 <h3 dir="auto"><%= level.name %></h3>
                 <p><%= t.levelCardCopy %></p>
               </a>

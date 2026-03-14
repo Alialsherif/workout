@@ -8,6 +8,7 @@ function createDefaultState() {
   return {
     levels: [],
     exercises: [],
+    progress: {},
     nextLevelId: 1,
     nextExerciseId: 1
   };
@@ -33,6 +34,7 @@ function loadState() {
     return {
       levels: Array.isArray(parsed.levels) ? parsed.levels : [],
       exercises: Array.isArray(parsed.exercises) ? parsed.exercises : [],
+      progress: parsed.progress && typeof parsed.progress === "object" ? parsed.progress : {},
       nextLevelId: Number.isInteger(parsed.nextLevelId) ? parsed.nextLevelId : 1,
       nextExerciseId: Number.isInteger(parsed.nextExerciseId) ? parsed.nextExerciseId : 1
     };
@@ -63,9 +65,47 @@ function sortByIdAsc(items) {
   return [...items].sort((first, second) => first.id - second.id);
 }
 
+function normalizeProgressIds(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return [...new Set(
+    value
+      .map((item) => Number(item))
+      .filter((item) => Number.isInteger(item) && item > 0)
+  )].sort((first, second) => first - second);
+}
+
 const db = {
   exportData() {
     return JSON.parse(JSON.stringify(state));
+  },
+
+  getLevelProgress(sessionId, levelId) {
+    const normalizedLevelId = String(Number(levelId));
+
+    if (!sessionId || normalizedLevelId === "NaN") {
+      return [];
+    }
+
+    const sessionProgress = state.progress[sessionId];
+    return normalizeProgressIds(sessionProgress ? sessionProgress[normalizedLevelId] : []);
+  },
+
+  saveLevelProgress(sessionId, levelId, completedExerciseIds) {
+    const normalizedLevelId = String(Number(levelId));
+
+    if (!sessionId || normalizedLevelId === "NaN") {
+      return;
+    }
+
+    if (!state.progress[sessionId]) {
+      state.progress[sessionId] = {};
+    }
+
+    state.progress[sessionId][normalizedLevelId] = normalizeProgressIds(completedExerciseIds);
+    persistState();
   },
 
   all(query, params, callback) {
@@ -145,6 +185,19 @@ const db = {
 
       if (exerciseIndex !== -1) {
         state.exercises.splice(exerciseIndex, 1);
+
+        for (const sessionProgress of Object.values(state.progress)) {
+          if (!sessionProgress || typeof sessionProgress !== "object") {
+            continue;
+          }
+
+          for (const levelId of Object.keys(sessionProgress)) {
+            sessionProgress[levelId] = normalizeProgressIds(sessionProgress[levelId]).filter(
+              (id) => id !== exerciseId
+            );
+          }
+        }
+
         persistState();
       }
 
@@ -201,6 +254,14 @@ const db = {
         if (state.exercises[index].level_id === levelId) {
           state.exercises.splice(index, 1);
         }
+      }
+
+      for (const sessionProgress of Object.values(state.progress)) {
+        if (!sessionProgress || typeof sessionProgress !== "object") {
+          continue;
+        }
+
+        delete sessionProgress[String(levelId)];
       }
 
       persistState();
